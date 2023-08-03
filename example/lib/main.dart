@@ -16,7 +16,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
+  Permisions _permisions = Permisions.unknown;
+  List<ContactPlus> _contacts = [];
   final _flutterContactsPlusPlugin = FlutterContactsPlus();
 
   @override
@@ -27,23 +28,38 @@ class _MyAppState extends State<MyApp> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // We also handle the message potentially returning null.
     try {
-      platformVersion =
-          await _flutterContactsPlusPlugin.getPlatformVersion() ?? 'Unknown platform version';
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
+      await checkPermissions();
+    } on PlatformException catch (e, s) {
+      if (!mounted) return;
+      setState(() {
+        _permisions = Permisions.unknown;
+      });
     }
+  }
 
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
+  checkPermissions() {
+    _flutterContactsPlusPlugin.checkPermission().then((permission) {
+      setState(() {
+        _permisions = permission;
+      });
+      if (permission == Permisions.granted) {
+        setUpListent();
+      }
+    });
+  }
 
-    setState(() {
-      _platformVersion = platformVersion;
+  updateContacts() {
+    _flutterContactsPlusPlugin.getContacts().then((value) => setState(() {
+          _contacts = value;
+        }));
+  }
+
+  setUpListent() {
+    updateContacts();
+    _flutterContactsPlusPlugin.listent().listen((event) async {
+      print(event);
+      updateContacts();
     });
   }
 
@@ -51,11 +67,47 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            // Add your onPressed code here!
+          },
+          backgroundColor: Colors.green,
+          child: const Icon(Icons.plus_one),
+        ),
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Text('Running on: $_platformVersion\n'),
+          child: Column(
+            children: [
+              Text('Running on: $_permisions\n'),
+              if (_permisions != Permisions.granted)
+                TextButton(
+                    onPressed: () {
+                      checkPermissions();
+                      _flutterContactsPlusPlugin
+                          .requestPermission()
+                          .then((value) async {
+                        checkPermissions();
+                      });
+                    },
+                    child: const Text("Request permisions")),
+              if (_permisions == Permisions.granted)
+                Expanded(
+                  child: ListView.builder(
+                    itemBuilder: (ctx, index) {
+                      final contact = _contacts[index];
+                      return ListTile(
+                        title: Text(contact.displayName),
+                        subtitle:
+                            Text(contact.phones.firstOrNull?.number ?? ""),
+                      );
+                    },
+                    itemCount: _contacts.length,
+                  ),
+                )
+            ],
+          ),
         ),
       ),
     );
