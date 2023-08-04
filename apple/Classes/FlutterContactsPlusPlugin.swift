@@ -24,7 +24,6 @@ extension FlutterPluginRegistrar {
 }
 
 
-@available(iOS 9.0, *)
 public class FlutterContactsPlusPlugin: NSObject, FlutterPlugin, ContactsHostApi {
     
     
