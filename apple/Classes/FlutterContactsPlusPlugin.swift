@@ -24,6 +24,7 @@ extension FlutterPluginRegistrar {
 }
 
 
+@available(iOS 9.0, *)
 public class FlutterContactsPlusPlugin: NSObject, FlutterPlugin, ContactsHostApi {
     
     
@@ -37,8 +38,8 @@ public class FlutterContactsPlusPlugin: NSObject, FlutterPlugin, ContactsHostApi
     }
     
     func checkPlist() throws {
-        let aa = Bundle.main.object(forInfoDictionaryKey: "NSContactsUsageDescription")
-        if aa == nil {
+        let hasContactPermissions = Bundle.main.object(forInfoDictionaryKey: "NSContactsUsageDescription")
+        if hasContactPermissions == nil {
             throw FlutterError(code: "MISSING_PLIST_USAGE_DESCRIPTION", message: nil, details: nil)
         }
     }

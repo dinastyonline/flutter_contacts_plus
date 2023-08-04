@@ -4,6 +4,7 @@
 //
 //  Created by David Londono on 2/08/23.
 //
+import Contacts
 #if os(iOS)
 import Flutter
 #elseif os(macOS)
@@ -34,31 +35,28 @@ public class StreamHandler: NSObject, FlutterStreamHandler {
 }
 
 
+@available(iOS 9.0, *)
 class StreamApi {
     static func setUp(binaryMessenger: FlutterBinaryMessenger, api: ContactsHostApi?) {
         let notificationCenter = NotificationCenter.default
         
         let listenContactsChannel = FlutterEventChannel(name: "dev.flutter.pigeon.com.dinastyonline.flutter_contacts_plus.ContactsHostApi.listenContacts", binaryMessenger: binaryMessenger)
         
-        if let api = api {
-            var token: NSObjectProtocol?
-            listenContactsChannel.setStreamHandler(
-                StreamHandler(listent: { (arguments,  events: @escaping FlutterEventSink) in
-                    var token = notificationCenter.addObserver(
-                        forName: NSNotification.Name.CNContactStoreDidChange,
-                        object: nil,
-                        queue: nil,
-                        using: { _ in events(true) }
-                    )
-                    return nil
-                }, cancel: { arguments in
-                    if let token =  token {
-                        notificationCenter.removeObserver(token)
-                    }
-                    return nil
-                }))
-        } else {
-            listenContactsChannel.setStreamHandler(nil)
-        }
+        var token: NSObjectProtocol?
+        listenContactsChannel.setStreamHandler(
+            StreamHandler(listent: { (arguments,  events: @escaping FlutterEventSink) in
+                token = notificationCenter.addObserver(
+                    forName: NSNotification.Name.CNContactStoreDidChange,
+                    object: nil,
+                    queue: nil,
+                    using: { _ in events(true) }
+                )
+                return nil
+            }, cancel: { arguments in
+                if let token =  token {
+                    notificationCenter.removeObserver(token)
+                }
+                return nil
+            }))
     }
 }
