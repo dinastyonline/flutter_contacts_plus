@@ -155,7 +155,7 @@ class ContactsService {
 
             if (query != null) {
                 selectionClauses.add(query.getSelection())
-                selectionArgs = query.getSelectionArgs()
+                selectionArgs = query.getSelectionArgs().toTypedArray()
             }
             val selection: String? = if (selectionClauses.isEmpty()) null else selectionClauses.joinToString(separator = " AND ")
 

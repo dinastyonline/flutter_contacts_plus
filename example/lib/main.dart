@@ -30,7 +30,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> initPlatformState() async {
     try {
       await checkPermissions();
-    } on PlatformException catch (e, s) {
+    } on PlatformException catch (e, _) {
       if (!mounted) return;
       setState(() {
         _permisions = Permisions.unknown;
