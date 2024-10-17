@@ -84,7 +84,7 @@ class _MyAppState extends State<MyApp> {
               if (_permisions != Permisions.granted)
                 TextButton(
                     onPressed: () {
-                      checkPermissions();
+                      // checkPermissions();
                       _flutterContactsPlusPlugin
                           .requestPermission()
                           .then((value) async {

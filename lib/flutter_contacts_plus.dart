@@ -58,13 +58,13 @@ class FlutterContactsPlus {
   static final api = ContactsHostApi();
   Future<Permisions> checkPermission() async {
     final permission = await api.checkPermission();
+
     return switch (permission) {
-       "authorized" => Permisions.granted,
-       "denied" => Permisions.denied,
-       "restricted" => Permisions.restricted,
-       "notDetermined" => Permisions.notDetermined,
-       "unknown" => Permisions.unknown,
-       _ => Permisions.unknown,
+       PermisionsApi.granted => Permisions.granted,
+       PermisionsApi.denied => Permisions.denied,
+       PermisionsApi.restricted => Permisions.restricted,
+       PermisionsApi.notDetermined => Permisions.notDetermined,
+       PermisionsApi.unknown => Permisions.unknown,
     };
   }
   Future<List<ContactPlus>> getContacts({

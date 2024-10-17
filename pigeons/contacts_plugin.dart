@@ -12,7 +12,7 @@ import 'package:pigeon/pigeon.dart';
     kotlinOptions: KotlinOptions(
       package: 'com.dinastyonline.flutter_contacts_plus'
     ),
-    swiftOut: 'apple/Classes/Contacts.g.swift',
+    swiftOut: 'darwin/Classes/Contacts.g.swift',
     swiftOptions: SwiftOptions(),
     // copyrightHeader: 'pigeons/copyright.txt',
     dartPackageName: 'com.dinastyonline.flutter_contacts_plus',
@@ -248,6 +248,7 @@ class ContactsRequest {
   bool includeNotesOnIos13AndAbove;
 }
 
+enum PermisionsApi { granted, denied, restricted, unknown, notDetermined }
 
 @HostApi()
 abstract class ContactsHostApi {
@@ -273,7 +274,7 @@ abstract class ContactsHostApi {
   List<Contact> getContactsInContainer(String containerId,ContactsRequest config);
 
   @async
-  String checkPermission();
+  PermisionsApi checkPermission();
 
 
   @async

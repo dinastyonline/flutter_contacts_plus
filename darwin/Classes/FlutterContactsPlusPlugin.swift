@@ -8,7 +8,9 @@ import FlutterMacOS
 #error("Unsupported platform.")
 #endif
 
-extension FlutterError: Error {}
+extension FlutterError: @retroactive Error {}
+
+extension NSPredicate: @unchecked @retroactive Sendable { }
 
 extension FlutterPluginRegistrar {
     var commonMessenger: FlutterBinaryMessenger {
@@ -25,8 +27,29 @@ extension FlutterPluginRegistrar {
 
 
 public class FlutterContactsPlusPlugin: NSObject, FlutterPlugin, ContactsHostApi {
-    
-    
+    func checkPermission(completion: @escaping (Result<PermisionsApi, any Error>) -> Void) {
+        
+        
+        DispatchQueue.global(qos: .userInteractive).async {
+            
+            let authorizationStatus = CNContactStore.authorizationStatus(for: .contacts)
+            
+            switch authorizationStatus {
+            case .authorized:
+                completion(.success(.granted))
+            case .denied:
+                completion(.success(.denied))
+            case .notDetermined:
+                completion(.success(.notDetermined))
+            case .restricted:
+                completion(.success(.restricted))
+            
+            @unknown default:
+                completion(.success(.unknown))
+            }
+        }
+
+    }
     
     
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -48,35 +71,16 @@ public class FlutterContactsPlusPlugin: NSObject, FlutterPlugin, ContactsHostApi
                 try self.checkPlist()
                 CNContactStore().requestAccess(for: .contacts, completionHandler: { (granted, err) -> Void in
                     if let error = err {
-                        completion(Result.failure(error))
+                        completion(.failure(error))
                     } else {
-                        completion(Result.success(granted))
+                        completion(.success(granted))
                     }
                 })
             } catch {
-                completion(Result.failure(error))
+                completion(.failure(error))
             }
         }
         
-    }
-    
-    func checkPermission(completion: @escaping (Result<String, Error>) -> Void) {
-        DispatchQueue.global(qos: .userInteractive).async {
-            let permision =  try! self._checkPermission()
-            completion(Result.success(permision))
-        }
-    }
-    
-    func _checkPermission() throws -> String {
-        let authStatus = CNContactStore.authorizationStatus(for: .contacts)
-        switch (authStatus) {
-        case .authorized: return "authorized"
-        case .denied: return "denied"
-        case .restricted: return "restricted"
-        case .notDetermined: return "notDetermined"
-        @unknown default:
-            return "unknown"
-        }
     }
     
     func _fetchContacts(predicate: NSPredicate?, config: ContactsRequest, completion: @escaping (Result<[Contact], Error>) -> Void) {

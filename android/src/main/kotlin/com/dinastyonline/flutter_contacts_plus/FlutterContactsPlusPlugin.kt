@@ -17,6 +17,7 @@ import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.PluginRegistry
 import io.flutter.plugin.common.PluginRegistry.RequestPermissionsResultListener
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -38,14 +39,14 @@ class FlutterContactsPlusPlugin: FlutterPlugin, ContactsHostApi, StreamApi, Acti
     private var permissionCallback: ((Boolean) -> Unit)? = null
   }
 
-  override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+  override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     context = flutterPluginBinding.applicationContext
     resolver = context!!.contentResolver
     ContactsHostApi.setUp(flutterPluginBinding.binaryMessenger, this)
     StreamApi.setUp(flutterPluginBinding.binaryMessenger, this)
   }
 
-  override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+  override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
   }
 
@@ -82,7 +83,7 @@ class FlutterContactsPlusPlugin: FlutterPlugin, ContactsHostApi, StreamApi, Acti
   private fun contactsByQuery(config: ContactsRequest, query: ContactsQuery?, callback: (kotlin.Result<List<Contact>>) -> Unit) {
 
     GlobalScope.launch(Dispatchers.IO) {
-      var contacts = service.select(
+      val contacts = service.select(
               resolver!!,
               query,
               config,
@@ -121,19 +122,20 @@ class FlutterContactsPlusPlugin: FlutterPlugin, ContactsHostApi, StreamApi, Acti
     TODO("Not yet implemented")
   }
 
-  override fun checkPermission(callback: (kotlin.Result<String>) -> Unit) {
+  override fun checkPermission(callback: (Result<PermisionsApi>) -> Unit) {
 
     val readPermission = Manifest.permission.READ_CONTACTS
     val writePermission = Manifest.permission.WRITE_CONTACTS
     if (ContextCompat.checkSelfPermission(context!!, readPermission) == PackageManager.PERMISSION_GRANTED &&
             (ContextCompat.checkSelfPermission(context!!, writePermission) == PackageManager.PERMISSION_GRANTED)
     ) {
-      callback(Result.success("authorized"))
+      callback(Result.success(PermisionsApi.GRANTED))
       return
     }
 
-    callback(Result.success("denied"))
+    callback(Result.success(PermisionsApi.DENIED))
   }
+
 
   override fun requestPermission(callback: (kotlin.Result<Boolean>) -> Unit) {
     fun dispatch(res: Boolean)  {
@@ -152,7 +154,7 @@ class FlutterContactsPlusPlugin: FlutterPlugin, ContactsHostApi, StreamApi, Acti
         ) {
           dispatch(true)
         }
-        var perms = mutableListOf<String>(readPermission)
+        val perms = mutableListOf<String>(readPermission)
         if (!readonly) {
           perms.add(writePermission)
         }
